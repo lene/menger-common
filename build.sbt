@@ -4,14 +4,14 @@ scalaVersion := "3.8.3"
 
 organization := "io.github.lene"
 description := "Common types and utilities for Menger ray tracer"
-homepage := Some(url("https://gitlab.com/lilacashes/menger"))
+homepage := Some(url("https://github.com/lene/menger-common"))
 licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0"))
 scmInfo := Some(ScmInfo(
-  url("https://gitlab.com/lilacashes/menger"),
-  "scm:git:git@gitlab.com:lilacashes/menger.git"
+  url("https://github.com/lene/menger-common"),
+  "scm:git:git@github.com:lene/menger-common.git"
 ))
 developers := List(
-  Developer("lene", "Lene Preuss", "lene.preuss@gmail.com", url("https://gitlab.com/lilacashes"))
+  Developer("lene", "Lene Preuss", "lene.preuss@gmail.com", url("https://github.com/lene"))
 )
 
 // Publication targets
@@ -27,7 +27,10 @@ credentials += Credentials(
   "GitLab Packages Registry",
   "gitlab.com",
   if (sys.env.contains("CI_JOB_TOKEN")) "gitlab-ci-token" else "Private-Token",
-  sys.env.getOrElse("CI_JOB_TOKEN", sys.env.getOrElse("GITLAB_PAT", ""))
+  sys.env.getOrElse(
+    "CI_JOB_TOKEN",
+    sys.env.getOrElse("GITLAB_PAT", sys.env.getOrElse("GITLAB_ACCESS_TOKEN", ""))
+  )
 )
 
 sonatypeCredentialHost := "central.sonatype.com"
