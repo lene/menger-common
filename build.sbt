@@ -50,5 +50,6 @@ Compile / wartremoverErrors ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.20" % Test,
-  "org.scalatestplus" %% "scalacheck-1-19" % "3.2.20.0" % Test
+  "org.scalatestplus" %% "scalacheck-1-19" % "3.2.20.0" % Test,
+  "com.tngtech.archunit" % "archunit" % "1.3.0" % Test
 )
