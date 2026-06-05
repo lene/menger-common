@@ -18,6 +18,7 @@ publishTo := sonatypePublishToBundle.value
 
 sonatypeCredentialHost := "central.sonatype.com"
 publishMavenStyle := true
+pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toArray)
 
 scalacOptions ++= Seq("-deprecation", "-explain", "-feature", "-Wunused:imports")
 

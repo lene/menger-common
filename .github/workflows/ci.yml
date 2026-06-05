@@ -30,6 +30,7 @@ jobs:
   version-not-tagged:
     name: Version Not Yet Tagged
     runs-on: ubuntu-latest
+    if: "!startsWith(github.ref, 'refs/tags/')"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -121,15 +122,15 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'sbt'
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: GPG_PASSPHRASE
       - uses: sbt/setup-sbt@v1
+      - name: Import GPG key
+        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
       - name: Publish to Maven Central
         run: sbt publishSigned sonatypeBundleRelease
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - uses: softprops/action-gh-release@v2
         with:
           files: target/scala-3*/menger-common*.jar
