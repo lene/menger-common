@@ -23,7 +23,10 @@ jobs:
           test -n "$VERSION"
           grep -F "## [$VERSION]" CHANGELOG.md
           grep -F "...$VERSION" CHANGELOG.md
-          if ! echo "${{ github.event.pull_request.title }}" | grep -q '^Draft:'; then
+          # Only enforce today's date when this PR bumps the version vs main
+          MAIN_VERSION=$(git show origin/main:build.sbt 2>/dev/null | grep 'version :=' | cut -d'"' -f2)
+          if [ "$VERSION" != "$MAIN_VERSION" ] && \
+             ! echo "${{ github.event.pull_request.title }}" | grep -q '^Draft:'; then
             grep -F "## [$VERSION] - $(date +%Y-%m-%d)" CHANGELOG.md
           fi
 
