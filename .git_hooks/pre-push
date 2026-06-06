@@ -40,8 +40,8 @@ else
   if ! grep -qF "## [$VERSION]" CHANGELOG.md; then
     echo "Changelog: ${RED_TEXT}FAILED${RESET_TEXT} (missing '## [$VERSION]' entry)"
     STATUS=1
-  elif ! grep -qF "...$VERSION" CHANGELOG.md; then
-    echo "Changelog: ${RED_TEXT}FAILED${RESET_TEXT} (missing link '...$VERSION' at bottom)"
+  elif ! grep -qF "[$VERSION]:" CHANGELOG.md; then
+    echo "Changelog: ${RED_TEXT}FAILED${RESET_TEXT} (missing link '[$VERSION]:' at bottom)"
     STATUS=1
   elif [ "$VERSION_BUMPED" -eq 1 ] && ! grep -qF "## [$VERSION] - $(date +%Y-%m-%d)" CHANGELOG.md; then
     echo "Changelog: ${RED_TEXT}FAILED${RESET_TEXT} (new version $VERSION needs today's date $(date +%Y-%m-%d))"
