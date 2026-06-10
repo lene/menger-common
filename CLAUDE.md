@@ -27,7 +27,7 @@ git config core.hooksPath .git_hooks
 | Hook | When | Checks |
 |------|------|--------|
 | pre-commit | on `git commit` | compile, tests, scalafix |
-| pre-push | on `git push` | compile, tests, scalafix |
+| pre-push | on `git push` | version policy, sbt launcher, Scalafix, tests, package, Scaladoc, MiMa, coverage policy, local publish, Java consumer smoke |
 
 ---
 
@@ -40,7 +40,8 @@ git push origin fix/short-description
 gh pr create --title "..." --body "..."
 ```
 
-CI runs on every PR. All jobs must pass before merging.
+CI runs on every branch push and every PR. All jobs must pass before merging.
+Main-branch releases are automatic unless the merged PR title contains `NORELEASE`.
 
 ---
 
@@ -60,7 +61,11 @@ sbt compile                    # Compile
 sbt test                       # All tests
 sbt "testOnly ClassName"       # Specific test
 sbt "scalafix --check"         # Code style check
-sbt publishLocal               # Local ivy publish
+sbt mimaReportBinaryIssues     # Binary compatibility gate
+sbt publishLocal               # Local Ivy publish
+sbt "set publishM2Configuration := publishM2Configuration.value.withOverwrite(true)" publishM2
+                              # Repeatable local Maven publish for smoke tests
+./.git_hooks/pre-push          # Authoritative local gate
 ```
 
 Pipeline monitoring:

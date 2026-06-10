@@ -33,12 +33,4 @@ else
   echo "Scalafix: ${GREEN_TEXT}OK${RESET_TEXT}"
 fi
 
-if [ $STATUS -gt 0 ]; then
-  commit_msg=$(git log --oneline 2>/dev/null | head -n 1 | cut -d' ' -f 2-)
-  if echo "$commit_msg" | grep -q '^WIP:'; then
-    echo >&2 "WIP commit — proceeding despite failures"
-    STATUS=0
-  fi
-fi
-
 exit $STATUS
