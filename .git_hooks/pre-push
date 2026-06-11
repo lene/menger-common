@@ -12,6 +12,23 @@ exec > >(tee -a "$log_file") 2>&1
 echo "=== menger-common pre-push gate ==="
 echo "Log: $log_file"
 
+# --- Phase 0: agentic policy checks (instant) ---
+if [ -x ./standards/hooks/check-test-justification.sh ]; then
+  RANGES=()
+  while read -r local_ref local_sha remote_ref remote_sha; do
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+      BASE=$(git merge-base origin/main "$local_sha" 2>/dev/null || true)
+      [ -n "$BASE" ] && RANGES+=("$BASE..$local_sha")
+    else
+      RANGES+=("$remote_sha..$local_sha")
+    fi
+  done
+  if [ ${#RANGES[@]} -gt 0 ]; then
+    ./standards/hooks/check-test-justification.sh "${RANGES[@]}" || exit 1
+    ./standards/hooks/check-rendering-discipline.sh "${RANGES[@]}" || exit 1
+  fi
+fi
+
 echo "=== Version policy ==="
 scripts/check-version-policy.sh
 
