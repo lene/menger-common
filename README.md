@@ -28,3 +28,18 @@ post-publish Java smoke test runs against the public artifact.
 
 Maven Central publication requires these GitHub Actions secrets:
 `SONATYPE_USERNAME`, `SONATYPE_PASSWORD`, `PGP_SECRET`, and `PGP_PASSPHRASE`.
+
+## Code standards
+
+`.scalafix.conf` and the `standards/` hook scripts are **canonical in the
+[menger](https://gitlab.com/lilacashes/menger) repository**. Do not edit them
+here directly. To propagate updates from menger:
+
+```bash
+# from your menger checkout:
+./scripts/sync-standards.sh /path/to/menger-common
+# review the diff, then commit and push in menger-common
+```
+
+A scheduled CI job in menger checks that these files are byte-identical across
+all three repos and fails if they diverge.
