@@ -26,8 +26,11 @@ object ObjectType:
     "tesseract-sponge-surface",
     "menger4d",
     "sierpinski4d",
-    "hexadecachoron4d"
+    "hexadecachoron4d",
+    "curve"
   )
+
+  val CURVE_TYPES: Set[String] = Set("curve")
 
   val MENGER4D_TYPES: Set[String] = Set("menger4d")
 
@@ -110,6 +113,9 @@ object ObjectType:
 
   def isRecursiveIASSponge(objectType: String): Boolean =
     normalize(objectType) == "sponge-recursive-ias"
+
+  def isCurve(objectType: String): Boolean =
+    CURVE_TYPES.contains(normalize(objectType))
 
   def isAnalyticalPrimitive(objectType: String): Boolean =
     ANALYTICAL_PRIMITIVE_TYPES.contains(normalize(objectType))
