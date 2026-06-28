@@ -27,7 +27,8 @@ object ObjectType:
     "menger4d",
     "sierpinski4d",
     "hexadecachoron4d",
-    "curve"
+    "curve",
+    "lsystem"
   )
 
   val CURVE_TYPES: Set[String] = Set("curve")
