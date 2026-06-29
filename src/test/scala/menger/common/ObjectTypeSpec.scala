@@ -166,7 +166,8 @@ class ObjectTypeSpec extends AnyFlatSpec with Matchers:
     ObjectType.VALID_TYPES should contain("sierpinski4d")
     ObjectType.VALID_TYPES should contain("hexadecachoron4d")
     ObjectType.VALID_TYPES should contain("curve")
-    ObjectType.VALID_TYPES.size shouldBe 25
+    ObjectType.VALID_TYPES should contain("lsystem")
+    ObjectType.VALID_TYPES.size shouldBe 26
 
   "ObjectType.SPONGE_TYPES" should "contain only 3D sponge types" in:
     ObjectType.SPONGE_TYPES should contain("sponge-volume")
