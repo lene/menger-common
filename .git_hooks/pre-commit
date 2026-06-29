@@ -1,4 +1,6 @@
 #!/bin/sh
+# Pre-commit: fast hygiene checks, target <30s.
+# Compile + scalafix only — no tests (pre-push is the correctness gate).
 
 RED_TEXT='\e[38;5;196m'
 GREEN_TEXT='\e[38;5;46m'
@@ -17,28 +19,20 @@ STATUS=0
 echo "=== Compile ==="
 sbt compile || STATUS=1
 
-echo "=== Tests ==="
-sbt test --warn || STATUS=1
-if [ $STATUS -gt 0 ]; then
-  echo "Tests: ${RED_TEXT}FAILED${RESET_TEXT}"
-else
-  echo "Tests: ${GREEN_TEXT}OK${RESET_TEXT}"
-fi
-
 echo "=== Scalafix ==="
-sbt "scalafix --check" --warn || STATUS=1
-if [ $STATUS -gt 0 ]; then
-  echo "Scalafix: ${RED_TEXT}FAILED${RESET_TEXT}"
-else
-  echo "Scalafix: ${GREEN_TEXT}OK${RESET_TEXT}"
-fi
+sbt "scalafix --check" || STATUS=1
 
 if [ $STATUS -gt 0 ]; then
-  commit_msg=$(git log --oneline 2>/dev/null | head -n 1 | cut -d' ' -f 2-)
-  if echo "$commit_msg" | grep -q '^WIP:'; then
-    echo >&2 "WIP commit — proceeding despite failures"
+  commit_msg=$(git log --oneline -1 --format=%s 2>/dev/null || true)
+  if echo "$commit_msg" | grep -qi '^WIP:\|^wip:'; then
+    echo "WIP commit — proceeding despite failures" >&2
     STATUS=0
   fi
 fi
 
+if [ $STATUS -gt 0 ]; then
+  echo "Scalafix: ${RED_TEXT}FAILED${RESET_TEXT}" >&2
+else
+  echo "All checks: ${GREEN_TEXT}OK${RESET_TEXT}"
+fi
 exit $STATUS
