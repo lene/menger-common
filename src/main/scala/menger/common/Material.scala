@@ -13,6 +13,10 @@ package menger.common
   * @param specular specular reflection strength in `[0, 1]`
   * @param emission emissive intensity multiplier; `0` disables emission
   * @param filmThickness thin-film interference thickness in nanometres
+  * @param dispersion Abbe number V_d for spectral dispersion; `0` disables (no
+  *        wavelength-dependent IOR). Lower values = more dispersion. Cauchy
+  *        coefficients A and B are derived from `ior` and `dispersion` at commit
+  *        time — shaders evaluate `n(λ) = A + B/λ²` per refraction.
   * @param baseColorTexture texture index for base color, or `-1` when unset
   * @param normalTexture texture index for normal mapping, or `-1` when unset
   * @param roughnessTexture texture index for roughness mapping, or `-1` when unset
@@ -25,6 +29,7 @@ case class Material(
     specular: Float = 0.5f,
     emission: Float = 0.0f,
     filmThickness: Float = 0.0f,
+    dispersion: Float = 0.0f,
     baseColorTexture: Int = -1,
     normalTexture: Int = -1,
     roughnessTexture: Int = -1
@@ -34,6 +39,19 @@ case class Material(
 object Material:
 
   private val White = Color(1.0f, 1.0f, 1.0f, 1.0f)
+
+  /** Cauchy dispersion coefficients derived from ior (n_d at 587.6 nm)
+    * and Abbe number V_d. Returns (A, B) for `n(λ) = A + B/λ²`.
+    * When V_d ≤ 0, returns (ior, 0.0f) — no dispersion. */
+  def cauchyCoefficients(ior: Float, abbeNumber: Float): (Float, Float) =
+    if (abbeNumber <= 0.0f) (ior, 0.0f)
+    else
+      val ld2 = 587.6f * 587.6f   // λ_d² (d-line, Fraunhofer D)
+      val lf2 = 486.1f * 486.1f   // λ_F² (F-line, Fraunhofer F)
+      val lc2 = 656.3f * 656.3f   // λ_C² (C-line, Fraunhofer C)
+      val b = (ior - 1.0f) / (abbeNumber * (1.0f / lf2 - 1.0f / lc2))
+      val a = ior - b / ld2
+      (a, b)
 
   // Dielectric presets (transparent materials with refraction)
   /** Clear dielectric preset with glass-like refraction. */
@@ -65,6 +83,13 @@ object Material:
     specular = 1.0f,
     emission = 0.0f
   )
+
+  // Dispersive variants (Cauchy IOR model, Abbe number V_d)
+  /** Dispersive glass — crown glass (V_d ≈ 59). Enables spectral refraction. */
+  val GlassDispersive = Glass.copy(dispersion = 59f)
+
+  /** Dispersive diamond — high dispersion (V_d ≈ 33). Source of \"fire\". */
+  val DiamondDispersive = Diamond.copy(dispersion = 33f)
 
   // Metal presets (colored reflections, no refraction)
   /** Opaque mirror-like metal preset. */
@@ -156,6 +181,8 @@ object Material:
       case "glass"     => java.util.Optional.of(Glass)
       case "water"     => java.util.Optional.of(Water)
       case "diamond"   => java.util.Optional.of(Diamond)
+      case "glass-dispersive"   => java.util.Optional.of(GlassDispersive)
+      case "diamond-dispersive" => java.util.Optional.of(DiamondDispersive)
       case "chrome"    => java.util.Optional.of(Chrome)
       case "gold"      => java.util.Optional.of(Gold)
       case "copper"    => java.util.Optional.of(Copper)
@@ -170,6 +197,7 @@ object Material:
   /** All known preset names as a Java-friendly set (for validation/help text). */
   val presetNames: java.util.Set[String] =
     java.util.Set.of(
-      "glass", "water", "diamond", "chrome", "gold", "copper",
+      "glass", "water", "diamond", "glass-dispersive", "diamond-dispersive",
+      "chrome", "gold", "copper",
       "film", "parchment", "metal", "plastic", "matte"
     )
