@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-07-04
+
+### Changed
+
+- `CausticsConfig.initialRadius` now accepts `0.0` (`CausticsConfig.AutoRadius`) as an
+  auto-derive sentinel: the native PPM pass derives the gather radius from scene geometry
+  (optix-jni >= 0.1.13). Positive values remain explicit overrides. Previously `0.0` was
+  rejected. Binary-compatible relaxation (Sprint 33.9).
+
+### Added
+
+- `CausticsConfig.AutoRadius` constant (`0.0f`) naming the auto-derive sentinel
+
 ## [0.1.4] - 2026-07-01
 
 ### Added
@@ -41,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release extracted from menger-app (Sprint 26)
 
+[0.1.5]: https://github.com/lene/menger-common/compare/0.1.4...0.1.5
 [0.1.4]: https://github.com/lene/menger-common/compare/0.1.3...0.1.4
 [0.1.3]: https://github.com/lene/menger-common/compare/0.1.2...0.1.3
 [0.1.2]: https://github.com/lene/menger-common/compare/0.1.1...0.1.2

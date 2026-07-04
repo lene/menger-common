@@ -38,14 +38,18 @@ case class CausticsConfig(
     s"photonsPerIteration must be 1-${CausticsConfig.MaxPhotonsPerIteration}, got $photonsPerIteration")
   require(iterations > 0 && iterations <= CausticsConfig.MaxIterations,
     s"iterations must be 1-${CausticsConfig.MaxIterations}, got $iterations")
-  require(initialRadius > 0.0f && initialRadius <= CausticsConfig.MaxInitialRadius,
-    s"initialRadius must be 0.0-${CausticsConfig.MaxInitialRadius}, got $initialRadius")
+  // initialRadius == AutoRadius (0.0) is a sentinel: the native PPM pass derives the gather
+  // radius from scene geometry. Any positive value up to the max is an explicit override.
+  require(initialRadius >= CausticsConfig.AutoRadius && initialRadius <= CausticsConfig.MaxInitialRadius,
+    s"initialRadius must be ${CausticsConfig.AutoRadius} (auto) or up to ${CausticsConfig.MaxInitialRadius}, got $initialRadius")
   require(alpha > 0.0f && alpha < 1.0f, s"alpha must be 0.0-1.0 exclusive, got $alpha")
 
 object CausticsConfig:
   val MaxPhotonsPerIteration: Int   = 10000000
   val MaxIterations: Int            = 1000
   val MaxInitialRadius: Float       = 10.0f
+  /** Sentinel gather radius: native PPM derives it from scene geometry (optix-jni >= 0.1.13). */
+  val AutoRadius: Float             = 0.0f
 
   val Disabled: CausticsConfig = CausticsConfig()
   val Default: CausticsConfig = CausticsConfig(enabled = true)
