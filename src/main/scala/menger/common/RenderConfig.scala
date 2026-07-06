@@ -7,7 +7,7 @@ object RenderLimits:
 
 // Configuration for render quality options
 case class RenderConfig(
-  shadows: Boolean = false,
+  shadows: Boolean = true,
   transparentShadows: Boolean = false,  // Sprint 13.2: colored shadows through transparent objects
   antialiasing: Boolean = false,
   aaMaxDepth: Int = 2,
