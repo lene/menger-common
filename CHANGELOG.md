@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-07-08
+
+### Fixed
+
+- `RenderConfig.shadows` now defaults to `true` (was `false`). Scenes rendered through the
+  DSL `--scene` path without explicit `RenderSettings` fall back to `RenderConfig.Default`,
+  so they now enable shadow rays by default — matching the CLI default and the
+  `RenderSettings.shadows` default. Previously these scenes silently rendered without
+  shadows: the Sprint 33 "shadows default on" change shipped on the menger side but the
+  `RenderConfig` half (7066109) was missing from 0.1.5.
+
 ## [0.1.5] - 2026-07-04
 
 ### Changed
@@ -54,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release extracted from menger-app (Sprint 26)
 
+[0.1.6]: https://github.com/lene/menger-common/compare/0.1.5...0.1.6
 [0.1.5]: https://github.com/lene/menger-common/compare/0.1.4...0.1.5
 [0.1.4]: https://github.com/lene/menger-common/compare/0.1.3...0.1.4
 [0.1.3]: https://github.com/lene/menger-common/compare/0.1.2...0.1.3
