@@ -158,7 +158,29 @@ jobs:
       - name: Import GPG key
         run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
       - name: Publish to Maven Central
-        run: sbt publishSigned sonatypeBundleRelease
+        # Central presence is the source of truth: sonatypeBundleRelease's
+        # status-poll can hit a transient read-timeout *after* the bundle
+        # already landed (see 0.1.6). Retry, but short-circuit whenever the
+        # artifact is actually on Central so a flaky poll can't red a good
+        # publish, and a genuine upload failure still exits 1.
+        # ponytail: 3 attempts; if Central sync ever lags >attempts, bump the loop.
+        run: |
+          VERSION=$(grep 'version :=' build.sbt | cut -d'"' -f2)
+          URL="https://repo1.maven.org/maven2/io/github/lene/menger-common_3/${VERSION}/menger-common_3-${VERSION}.pom"
+          for attempt in 1 2 3; do
+            if curl -sf "$URL" > /dev/null 2>&1; then
+              echo "Version ${VERSION} already on Central — publish succeeded"
+              exit 0
+            fi
+            echo "Publish attempt ${attempt}/3"
+            sbt publishSigned sonatypeBundleRelease && exit 0
+            echo "sbt exited non-zero; re-checking Central before retrying..."
+            sleep 30
+          done
+          curl -sf "$URL" > /dev/null 2>&1 && \
+            { echo "Version ${VERSION} on Central despite sbt error"; exit 0; }
+          echo "Publish failed: ${VERSION} not on Central after 3 attempts"
+          exit 1
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
