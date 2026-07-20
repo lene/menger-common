@@ -88,11 +88,16 @@ else
 fi
 
 echo "=== Scalafix ==="
-sbt "scalafix --check" || STATUS=1
-if [ $STATUS -gt 0 ]; then
-  echo "Scalafix: ${RED_TEXT}FAILED${RESET_TEXT}"
-else
+# Report scalafix's own result, not the accumulated $STATUS. Testing the shared
+# flag makes every later step inherit an earlier failure and claim it as its
+# own: a failing changelog check printed "Scalafix: FAILED" while scalafix
+# passed, and "Tests: FAILED" on the line directly after "Tests: succeeded 153,
+# failed 0". That sends you debugging the wrong check.
+if sbt "scalafix --check"; then
   echo "Scalafix: ${GREEN_TEXT}OK${RESET_TEXT}"
+else
+  STATUS=1
+  echo "Scalafix: ${RED_TEXT}FAILED${RESET_TEXT}"
 fi
 
 exit $STATUS
