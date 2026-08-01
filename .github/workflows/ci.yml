@@ -34,7 +34,7 @@ jobs:
           if [ "$VERSION" != "$MAIN_VERSION" ] && \
              [ "${LATEST_TAG#v}" != "$VERSION" ] && \
              ! echo "${{ github.event.pull_request.title }}" | grep -q '^Draft:'; then
-            grep -F "## [$VERSION] - $(date +%Y-%m-%d)" CHANGELOG.md
+            grep -F "## [$VERSION] - $(TZ=UTC date +%Y-%m-%d)" CHANGELOG.md
           fi
 
   version-not-tagged:
@@ -213,7 +213,7 @@ jobs:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65  # v2.6.2 (CR-14: pin to commit SHA)
         with:
           files: target/scala-3*/menger-common*.jar
           generate_release_notes: false
