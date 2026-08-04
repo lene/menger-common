@@ -19,12 +19,12 @@ jobs:
           fetch-depth: 0
       - name: Check changelog entry exists and is dated
         run: |
-          VERSION=$(grep 'version :=' build.sbt | cut -d'"' -f2)
+          VERSION=$(awk -F'"' '/^version :=/{print $2; exit}' build.sbt)
           test -n "$VERSION"
           grep -F "## [$VERSION]" CHANGELOG.md
           grep -F "[$VERSION]:" CHANGELOG.md
           # Only enforce today's date when this PR bumps the version vs main
-          MAIN_VERSION=$(git show origin/main:build.sbt 2>/dev/null | grep 'version :=' | cut -d'"' -f2)
+          MAIN_VERSION=$(git show origin/main:build.sbt 2>/dev/null | awk -F'"' '/^version :=/{print $2; exit}')
           # ...and not when the branch is an already-released version being merged
           # back: $VERSION is then the most recent tag reachable from HEAD, the
           # release happened on its own date, and demanding today's date would
@@ -47,10 +47,10 @@ jobs:
           fetch-depth: 0
       - name: Check tag does not already exist for new versions
         run: |
-          VERSION=$(grep 'version :=' build.sbt | cut -d'"' -f2)
+          VERSION=$(awk -F'"' '/^version :=/{print $2; exit}' build.sbt)
           test -n "$VERSION"
           git fetch --tags
-          MAIN_VERSION=$(git show origin/main:build.sbt 2>/dev/null | grep 'version :=' | cut -d'"' -f2)
+          MAIN_VERSION=$(git show origin/main:build.sbt 2>/dev/null | awk -F'"' '/^version :=/{print $2; exit}')
           # Only fail if this branch bumps the version and the tag already exists
           if [ "$VERSION" != "$MAIN_VERSION" ] && git tag | grep -q "^${VERSION}$"; then
             # ...unless $VERSION is the most recent tag reachable from HEAD. That
@@ -95,7 +95,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=$(grep 'version :=' build.sbt | cut -d'"' -f2)
+          VERSION=$(awk -F'"' '/^version :=/{print $2; exit}' build.sbt)
           echo "Version in build.sbt: $VERSION"
           if git rev-parse "refs/tags/$VERSION" >/dev/null 2>&1; then
             echo "Tag $VERSION already exists, skipping"
@@ -217,7 +217,7 @@ jobs:
         # publish, and a genuine upload failure still exits 1.
         # ponytail: 3 attempts; if Central sync ever lags >attempts, bump the loop.
         run: |
-          VERSION=$(grep 'version :=' build.sbt | cut -d'"' -f2)
+          VERSION=$(awk -F'"' '/^version :=/{print $2; exit}' build.sbt)
           URL="https://repo1.maven.org/maven2/io/github/lene/menger-common_3/${VERSION}/menger-common_3-${VERSION}.pom"
           for attempt in 1 2 3; do
             if curl -sf "$URL" > /dev/null 2>&1; then
@@ -237,17 +237,20 @@ jobs:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-      - name: Resolve release tag
-        id: rel
-        # On tag refs github.ref_name IS the tag; on main in-run publishes it is the
-        # branch, so read the version from build.sbt (action-gh-release requires a tag).
-        run: echo "tag=$(grep 'version :=' build.sbt | cut -d'\"' -f2)" >> "$GITHUB_OUTPUT"
-      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65  # v2.6.2 (CR-14: pin to commit SHA)
-        with:
-          tag_name: ${{ steps.rel.outputs.tag }}
-          files: target/scala-3*/menger-common*.jar
-          generate_release_notes: false
-          body_path: CHANGELOG.md
+      - name: GitHub Release
+        # Idempotent (view-then-create): works on tag refs and main in-run publishes
+        # alike — no tag_name/ref_name trap (action-gh-release failed the 0.2.0 run on
+        # exactly that), and re-runs after a partial failure are safe.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(awk -F'"' '/^version :=/{print $2; exit}' build.sbt)
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists — skipping"
+          else
+            gh release create "$VERSION" --repo "$GITHUB_REPOSITORY" \
+              --notes-file CHANGELOG.md target/scala-3*/menger-common*.jar
+          fi
 
   # ── post-publish verification ───────────────────────────────────────────────
 
@@ -264,7 +267,7 @@ jobs:
           distribution: 'temurin'
       - name: Wait for Maven Central sync
         run: |
-          VERSION=$(grep 'version :=' build.sbt | cut -d'"' -f2)
+          VERSION=$(awk -F'"' '/^version :=/{print $2; exit}' build.sbt)
           URL="https://repo1.maven.org/maven2/io/github/lene/menger-common_3/${VERSION}/menger-common_3-${VERSION}.pom"
           for i in $(seq 1 20); do
             if curl -sf "$URL" > /dev/null 2>&1; then
@@ -278,6 +281,6 @@ jobs:
           exit 1
       - name: Run Java smoke test against published artifact
         run: |
-          VERSION=$(grep 'version :=' build.sbt | cut -d'"' -f2)
+          VERSION=$(awk -F'"' '/^version :=/{print $2; exit}' build.sbt)
           cd smoke-tests/java
           mvn test -Dmenger.version=$VERSION
