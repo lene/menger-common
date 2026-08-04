@@ -237,8 +237,14 @@ jobs:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Resolve release tag
+        id: rel
+        # On tag refs github.ref_name IS the tag; on main in-run publishes it is the
+        # branch, so read the version from build.sbt (action-gh-release requires a tag).
+        run: echo "tag=$(grep 'version :=' build.sbt | cut -d'\"' -f2)" >> "$GITHUB_OUTPUT"
       - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65  # v2.6.2 (CR-14: pin to commit SHA)
         with:
+          tag_name: ${{ steps.rel.outputs.tag }}
           files: target/scala-3*/menger-common*.jar
           generate_release_notes: false
           body_path: CHANGELOG.md
