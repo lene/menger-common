@@ -1,5 +1,5 @@
 name := "menger-common"
-version := "0.1.6"
+version := "0.2.0"
 scalaVersion := "3.8.3"
 
 organization := "io.github.lene"
