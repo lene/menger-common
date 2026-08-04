@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-08-04
+
+### Removed
+
+- **BREAKING:** `ObjectType` (the geometry-type vocabulary: `VALID_TYPES`, the
+  `SPONGE_TYPES`/`PROJECTED_4D_TYPES`/… subsets, and the `isValid`/`isSponge`/`normalize`
+  predicates) moved out of menger-common into the menger app (Sprint 35 Phase 4, finding
+  F6). The type vocabulary changes with every new menger geometry type, which forced a
+  menger-common release per feature — a shared kernel must not version with the app's
+  feature cadence. Consumers: take `ObjectType` from `menger-app` (same
+  `menger.common.ObjectType` API, unchanged) and pin menger-common 0.2.0.
+
 ## [0.1.6] - 2026-07-08
 
 ### Fixed
@@ -65,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release extracted from menger-app (Sprint 26)
 
+[0.2.0]: https://github.com/lene/menger-common/compare/0.1.6...0.2.0
 [0.1.6]: https://github.com/lene/menger-common/compare/0.1.5...0.1.6
 [0.1.5]: https://github.com/lene/menger-common/compare/0.1.4...0.1.5
 [0.1.4]: https://github.com/lene/menger-common/compare/0.1.3...0.1.4
