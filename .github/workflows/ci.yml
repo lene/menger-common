@@ -132,7 +132,7 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
-      - run: sbt "scalafix --check"
+      - run: ./scripts/suites/lint.sh
 
   archunit:
     name: ArchUnit
@@ -160,7 +160,7 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
-      - run: sbt coverage test coverageReport coverageAggregate
+      - run: ./scripts/suites/coverage.sh
 
   # ── build ──────────────────────────────────────────────────────────────────
 
