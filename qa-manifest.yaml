@@ -1,0 +1,25 @@
+# qa-manifest.yaml (Sprint 36 C1) — path patterns -> change classes -> suite relevance,
+# and per-suite tier (commit|push|pr|main|release). Single source of truth for "what runs
+# on this push", read by standards/scripts/qa-runner.sh and cross-checked against
+# .git_hooks/pre-push and .github/workflows/ci.yml by scripts/check-suite-parity.sh (C7).
+# Extends the coverage-manifest.yaml pattern (Sprint 35 F14, menger). Not vendored —
+# inherently per-repo.
+#
+# `requires: []` = always relevant regardless of changed paths (structural checks).
+# `requires: [a]` = relevant if a matched.
+# `coverage` stays CI-only (tier: main, not in the push-tier hook list) — formalizing
+# today's existing behavior, not a new decision; see check-suite-parity.sh's own note
+# that a suite need not run in both the hook and CI.
+
+change_classes:
+  scala:
+    - '\.(scala|sbt)$'
+    - '^project/'
+
+suites:
+  parity:    { tier: push, requires: [] }
+  policy:    { tier: push, requires: [] }
+  preflight: { tier: push, requires: [] }
+  lint:      { tier: push, requires: [] }
+  unit:      { tier: push, requires: [scala] }
+  coverage:  { tier: main, requires: [scala] }
