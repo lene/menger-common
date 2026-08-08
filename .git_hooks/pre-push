@@ -1,9 +1,12 @@
 #!/bin/sh
-
-RED_TEXT='\e[38;5;196m'
-GREEN_TEXT='\e[38;5;46m'
-RESET_TEXT='\e[0m'
-
+# Pre-push hook (Sprint 36 B3): thin wrapper. Change detection is unchanged
+# (standards/hooks/lib.sh); this hook's only job is to compute QA_RANGES/QA_REMOTE and
+# hand the repo's fixed suite list to standards/scripts/qa-runner.sh, which runs each
+# suite script (scripts/suites/*.sh) and decides its own PASS/FAIL/SKIP — replacing the
+# old "No code changes — skipping pre-push checks" single-line skip with an honest
+# per-suite summary (every suite always runs and self-reports; a doc-only push now
+# shows SKIPPED for each, not a blanket early exit).
+#
 # Detect changed files. The inline loop this replaces read only git's pre-push
 # protocol from stdin, so running the hook by hand — no stdin — produced an empty
 # file set, skipped every check below and exited 0 regardless of the diff. See
@@ -22,82 +25,11 @@ else
   # comparison rather than silently skipping.
   BASE=$(git merge-base origin/main HEAD 2>/dev/null)
   CHANGED_FILES=$(git diff --name-only "${BASE:-HEAD}" HEAD)
+  RANGES="${BASE:-HEAD}..HEAD"
 fi
 
-HAS_SCALA=$(echo "$CHANGED_FILES" | grep -cE '\.(scala|sbt)$|^project/')
+export HAS_SCALA=$(echo "$CHANGED_FILES" | grep -cE '\.(scala|sbt)$|^project/')
+export QA_RANGES="$RANGES"
+export QA_REMOTE="$1"
 
-if [ "$HAS_SCALA" -eq 0 ]; then
-  echo "No code changes — skipping pre-push checks."
-  exit 0
-fi
-
-STATUS=0
-
-echo "=== Changelog & Version ==="
-VERSION=$(grep 'version :=' build.sbt | cut -d'"' -f2)
-if [ -z "$VERSION" ]; then
-  echo "Changelog: ${RED_TEXT}FAILED${RESET_TEXT} (cannot read version from build.sbt)"
-  STATUS=1
-else
-  MAIN_VERSION=$(git show origin/main:build.sbt 2>/dev/null | grep 'version :=' | cut -d'"' -f2)
-  VERSION_BUMPED=0
-  [ "$VERSION" != "$MAIN_VERSION" ] && VERSION_BUMPED=1
-  # A version differing from main's is usually a release being prepared — but it
-  # is also exactly what an already-released branch looks like when merged back.
-  # Detect the latter: $VERSION is the most recent tag reachable from HEAD, so
-  # this branch is the one that produced that release. "Dated today" and "not yet
-  # tagged" are then the wrong requirements: the release already happened, on its
-  # own date, and demanding today's date would mean falsifying the changelog.
-  LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-  MERGE_BACK=0
-  if [ "$VERSION_BUMPED" -eq 1 ] && [ "${LATEST_TAG#v}" = "$VERSION" ]; then
-    MERGE_BACK=1
-  fi
-  if ! grep -qF "## [$VERSION]" CHANGELOG.md; then
-    echo "Changelog: ${RED_TEXT}FAILED${RESET_TEXT} (missing '## [$VERSION]' entry)"
-    STATUS=1
-  elif ! grep -qF "[$VERSION]:" CHANGELOG.md; then
-    echo "Changelog: ${RED_TEXT}FAILED${RESET_TEXT} (missing link '[$VERSION]:' at bottom)"
-    STATUS=1
-  elif [ "$VERSION_BUMPED" -eq 1 ] && [ "$MERGE_BACK" -eq 0 ] && ! grep -qF "## [$VERSION] - $(date +%Y-%m-%d)" CHANGELOG.md; then
-    echo "Changelog: ${RED_TEXT}FAILED${RESET_TEXT} (new version $VERSION needs today's date $(date +%Y-%m-%d))"
-    STATUS=1
-  elif [ "$VERSION_BUMPED" -eq 1 ] && [ "$MERGE_BACK" -eq 0 ] && git tag | grep -q "^${VERSION}$"; then
-    echo "Version: ${RED_TEXT}FAILED${RESET_TEXT} (tag $VERSION already exists — bump version)"
-    STATUS=1
-  elif [ "$MERGE_BACK" -eq 1 ]; then
-    echo "Changelog & Version: ${GREEN_TEXT}OK${RESET_TEXT} (merging released $VERSION back into main)"
-  else
-    echo "Changelog & Version: ${GREEN_TEXT}OK${RESET_TEXT}"
-  fi
-fi
-
-echo "=== Compile ==="
-sbt compile || STATUS=1
-
-echo "=== Tests ==="
-# NB: `sbt test | tee` returns tee's exit code (0), not sbt's — a pipe here would
-# silently pass on failing tests. /bin/sh (dash) has no pipefail/PIPESTATUS, so
-# capture sbt's real exit via a marker line that survives the tee.
-{ sbt test 2>&1; echo "SBT_TEST_RC=$?"; } | tee /tmp/menger-common-pre-push-test.log
-if grep -q '^SBT_TEST_RC=0$' /tmp/menger-common-pre-push-test.log; then
-  echo "Tests: ${GREEN_TEXT}OK${RESET_TEXT}"
-else
-  STATUS=1
-  echo "Tests: ${RED_TEXT}FAILED${RESET_TEXT} (see /tmp/menger-common-pre-push-test.log)"
-fi
-
-echo "=== Scalafix ==="
-# Report scalafix's own result, not the accumulated $STATUS. Testing the shared
-# flag makes every later step inherit an earlier failure and claim it as its
-# own: a failing changelog check printed "Scalafix: FAILED" while scalafix
-# passed, and "Tests: FAILED" on the line directly after "Tests: succeeded 153,
-# failed 0". That sends you debugging the wrong check.
-if sbt "scalafix --check"; then
-  echo "Scalafix: ${GREEN_TEXT}OK${RESET_TEXT}"
-else
-  STATUS=1
-  echo "Scalafix: ${RED_TEXT}FAILED${RESET_TEXT}"
-fi
-
-exit $STATUS
+./standards/scripts/qa-runner.sh parity policy preflight lint unit
