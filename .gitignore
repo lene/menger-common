@@ -98,3 +98,7 @@ optix-jni/NVIDIA-OptiX-SDK-*.sh
 # OptiX JNI standalone test binary
 optix-jni/src/main/native/standalone_test
 shadow_alpha_*
+
+# repowise local cache/index/keys
+.repowise/
+.mcp.json
