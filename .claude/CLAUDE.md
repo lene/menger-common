@@ -11,7 +11,7 @@
 > (documentation, ownership, history, decisions). **Always verify against
 > actual source files before making changes** — the index may be stale.
 
-Last indexed: 2026-08-10 (commit 6c65bdf). Confidence: 100%.
+Last indexed: 2026-08-28 (commit bfda062). Confidence: 100%.
 ### Architecture
 This repository defines a declarative domain-specific language (DSL) for constructing 3D fractal scenes: it ingests type-safe Scala definitions of Menger‑sponge geometry, materials, and lighting, validates structural constraints, and outputs a normalized scene specification suitable for rendering engines or serialization. The pipeline transforms user‑supplied hierarchical object graphs into a consistent, render‑ready intermediate representation, enabling reusable, composable scene authoring. The repository follows a minimal, layered structure centered on one domain package:
 **Design rationale:**
@@ -36,16 +36,16 @@ This repository defines a declarative domain-specific language (DSL) for constru
 ### Hotspots (High Churn)
 | File | Churn | 90d Commits | Owner |
 |------|-------|-------------|-------|
-| `.github/workflows/ci.yml` | 97.7th %ile | 16 | Lene Preuss |
-| `standards/hooks/lib.sh` | 95.5th %ile | 6 | Lene |
-| `.git_hooks/pre-push` | 93.2th %ile | 9 | Lene |
-| `src/main/scala/menger/common/Material.scala` | 90.9th %ile | 3 | Lene Preuss |
-| `CLAUDE.md` | 84.1th %ile | 6 | Lene Preuss |
+| `.github/workflows/ci.yml` | 97.9th %ile | 17 | Lene Preuss |
+| `standards/hooks/lib.sh` | 95.8th %ile | 6 | Lene |
+| `.git_hooks/pre-push` | 93.8th %ile | 9 | Lene |
+| `src/main/scala/menger/common/Material.scala` | 91.7th %ile | 3 | Lene Preuss |
+| `CLAUDE.md` | 83.3th %ile | 7 | Lene Preuss |
 
 ## Code health
 Three signals: **defect risk** (the overall score), **maintainability** (smells that hurt readability/change-cost without predicting bugs), and **performance** (static performance RISK: I/O-in-loop / N+1 shapes that waste work, high-precision/low-recall). Maintainability and performance are co-equal views, never blended into the defect headline. See `docs/CODE_HEALTH.md`.
 
-Defect risk, Hotspot health: 8.98/10 (stable) ·
+Defect risk, Hotspot health: 8.96/10 (stable) ·
 Average: 9.77/10 ·
 Worst: 7.49/10 (`src/main/scala/menger/common/RenderConfig.scala`)
 Maintainability, Average: 9.95/10
