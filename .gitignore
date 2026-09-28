@@ -102,3 +102,6 @@ shadow_alpha_*
 # repowise local cache/index/keys
 .repowise/
 .mcp.json
+
+# repowise API keys (local)
+.repowise/.env
