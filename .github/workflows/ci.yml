@@ -228,30 +228,18 @@ jobs:
       - uses: sbt/setup-sbt@v1
       - name: Import GPG key
         run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+      - name: Build release artifacts
+        # Built separately so the GitHub Release gets its jars even when the publish step
+        # finds the version already on Central and uploads nothing.
+        run: sbt package packageSrc packageDoc
       - name: Publish to Maven Central
-        # Central presence is the source of truth: sonatypeBundleRelease's
-        # status-poll can hit a transient read-timeout *after* the bundle
-        # already landed (see 0.1.6). Retry, but short-circuit whenever the
-        # artifact is actually on Central so a flaky poll can't red a good
-        # publish, and a genuine upload failure still exits 1.
-        # ponytail: 3 attempts; if Central sync ever lags >attempts, bump the loop.
+        # Shared, idempotent publish with presence on Central as the source of truth (see
+        # the script). Replaces the inline retry loop, which re-ran sonatypeBundleRelease
+        # after a status-poll timeout and so re-uploaded a version that was still publishing.
         run: |
           VERSION=$(awk -F'"' '/^version :=/{print $2; exit}' build.sbt)
-          URL="https://repo1.maven.org/maven2/io/github/lene/menger-common_3/${VERSION}/menger-common_3-${VERSION}.pom"
-          for attempt in 1 2 3; do
-            if curl -sf "$URL" > /dev/null 2>&1; then
-              echo "Version ${VERSION} already on Central — publish succeeded"
-              exit 0
-            fi
-            echo "Publish attempt ${attempt}/3"
-            sbt publishSigned sonatypeBundleRelease && exit 0
-            echo "sbt exited non-zero; re-checking Central before retrying..."
-            sleep 30
-          done
-          curl -sf "$URL" > /dev/null 2>&1 && \
-            { echo "Version ${VERSION} on Central despite sbt error"; exit 0; }
-          echo "Publish failed: ${VERSION} not on Central after 3 attempts"
-          exit 1
+          standards/scripts/publish-maven-central.sh io/github/lene/menger-common_3 \
+            "$VERSION" publishSigned sonatypeBundleRelease
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
