@@ -206,6 +206,10 @@ jobs:
   publish:
     name: Publish to Maven Central + GitHub Release
     runs-on: ubuntu-latest
+    # Protected environment (security review 2026-10-14, menger-toplevel#83): every publish run
+    # waits for a maintainer approval, and the signing/Sonatype secrets live in this environment,
+    # not at repository level, so no other job can read them.
+    environment: release
     # Tag refs publish directly (manual tags). On main pushes, publish in-run when
     # create-tag just tagged or a prior tag never got its release (self-heal) — a
     # CI-pushed tag cannot trigger the tag-ref workflow.
