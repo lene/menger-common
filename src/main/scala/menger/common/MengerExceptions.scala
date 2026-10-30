@@ -125,3 +125,36 @@ case class InvalidDirectionException(
 case class NotYetImplementedException(
   feature: String
 ) extends MengerException(s"Not yet implemented: $feature")
+
+/**
+ * Exception thrown when something outside the program is wrong: ffmpeg is not installed, a
+ * native library did not load, the GPU context is lost. It is neither the user's input
+ * ([[ConfigurationException]], [[ParseException]], [[ValidationException]]) nor a bug
+ * ([[InternalException]]), so the program reports it with its remedy and refuses to go on.
+ *
+ * @param problem What is wrong with the environment
+ * @param remedy Optional hint for what the user can do about it
+ * @param cause Optional underlying cause
+ */
+case class EnvironmentException(
+  problem: String,
+  remedy: Option[String] = None,
+  cause: Option[Throwable] = None
+) extends MengerException(
+  remedy match
+    case Some(hint) => s"$problem. $hint"
+    case None => problem,
+  cause
+)
+
+/**
+ * Exception thrown when an invariant of the program itself fails: a combination that no input
+ * should be able to reach got through. It is a bug, reported with its trace, never a user error.
+ *
+ * @param invariant The invariant that failed
+ * @param cause Optional underlying cause
+ */
+case class InternalException(
+  invariant: String,
+  cause: Option[Throwable] = None
+) extends MengerException(s"Internal error: $invariant", cause)
