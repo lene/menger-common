@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-31
+
+### Added
+
+- `EnvironmentException(problem, remedy, cause)`: something outside the program is wrong (ffmpeg
+  is not installed, a native library did not load, the GPU context is lost); the message
+  carries the remedy the user can act on.
+- `InternalException(invariant, cause)`: an invariant of the program itself failed, a bug,
+  reported with its trace. Both extend `MengerException`, which is sealed in this artifact, so
+  an application could not add them itself. With `ConfigurationException`, `ParseException` and
+  `ValidationException` (the user's input) they are the three kinds of failure menger reports
+  (menger Sprint 37, menger#96, #103).
+
+### Changed
+
+- Documentation only: `Directional.direction` is the direction the light *travels* (`(0,-1,0)` shines
+  straight down). It was documented as pointing toward the light source, which matched optix-jni's
+  surface shading but not its caustic photon emission; both read it as the travel direction now.
+  No code changed.
+
 ## [0.2.0] - 2026-08-04
 
 ### Removed
@@ -77,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release extracted from menger-app (Sprint 26)
 
+[0.3.0]: https://github.com/lene/menger-common/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/lene/menger-common/compare/0.1.6...0.2.0
 [0.1.6]: https://github.com/lene/menger-common/compare/0.1.5...0.1.6
 [0.1.5]: https://github.com/lene/menger-common/compare/0.1.4...0.1.5
