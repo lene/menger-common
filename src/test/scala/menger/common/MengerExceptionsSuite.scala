@@ -61,3 +61,29 @@ class MengerExceptionsSuite extends AnyFlatSpec with Matchers:
     ParseException("test", "input") shouldBe a[RuntimeException]
     ValidationException("test", "field", "value") shouldBe a[RuntimeException]
     ConfigurationException("test") shouldBe a[RuntimeException]
+
+  "EnvironmentException" should "format the problem alone" in:
+    EnvironmentException("ffmpeg not found").getMessage shouldBe "ffmpeg not found"
+
+  it should "append the remedy when provided" in:
+    val ex = EnvironmentException("ffmpeg not found", Some("Install ffmpeg to use --video output"))
+    ex.getMessage shouldBe "ffmpeg not found. Install ffmpeg to use --video output"
+
+  it should "keep its cause" in:
+    val cause = new java.io.IOException("no such file")
+    EnvironmentException("library failed to load", cause = Some(cause)).getCause shouldBe cause
+
+  "InternalException" should "say it is an internal error" in:
+    InternalException("unknown mesh type 'x'").getMessage shouldBe
+      "Internal error: unknown mesh type 'x'"
+
+  it should "keep its cause" in:
+    val cause = new IllegalStateException("boom")
+    InternalException("unreachable", Some(cause)).getCause shouldBe cause
+
+  "The exception kinds" should "all be MengerExceptions, so one catch handles them" in:
+    val all: List[MengerException] = List(
+      ConfigurationException("c"), EnvironmentException("e"), InternalException("i")
+    )
+    all.map(_.getClass.getSimpleName) shouldBe
+      List("ConfigurationException", "EnvironmentException", "InternalException")

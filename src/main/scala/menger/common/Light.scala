@@ -14,10 +14,11 @@ sealed trait Light:
 object Light:
   /** Directional light with parallel rays (like sunlight).
     *
-    * @param direction Vector pointing TOWARD the light source position (where the light comes from).
-    *                  The light rays travel in the opposite direction (-direction), shining onto the scene.
-    *                  For example, direction=(1,-1,-1) places light at upper-right-back, shining toward lower-left-front.
-    *                  Automatically normalized.
+    * @param direction The direction the light TRAVELS: (0,-1,0) shines straight down, (1,-1,-1)
+    *                  comes from the upper -x/+z side and shines toward +x/-z. Automatically
+    *                  normalized. (This used to be documented as "toward the light source", which
+    *                  matched optix-jni's surface shading but not its caustic photon emission;
+    *                  since optix-jni 2026-09 both read it as the travel direction.)
     * @param color Light color (RGB, each component 0.0-1.0)
     * @param intensity Light brightness multiplier (default: 1.0)
     */
