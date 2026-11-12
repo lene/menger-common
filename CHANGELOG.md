@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-11-12
+
+### Added
+
+- `Vector.Scale[N]`: a per-axis geometry scale, one factor per axis, built like `Vector[N]`
+  (`Scale[4](1f, 1f, 1f, 0.5f)`). It enforces what a `List[Float]` cannot: length N and every
+  factor finite and >= 0 (zero collapses the axis). Applied after an object's uniform size; the
+  last factor is the extrusion along the newest axis. Offers `apply(i)`, `apply(Vector[N])`,
+  `isIdentity`, `toIndexedSeq`, `dimension`, `withLast(f)` and `Scale.identity[N]` (menger#164).
+  Additive and binary compatible; menger takes it by bumping its pin to 0.4.0.
+
 ## [0.3.0] - 2026-10-31
 
 ### Added
@@ -97,6 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release extracted from menger-app (Sprint 26)
 
+[0.4.0]: https://github.com/lene/menger-common/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/lene/menger-common/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/lene/menger-common/compare/0.1.6...0.2.0
 [0.1.6]: https://github.com/lene/menger-common/compare/0.1.5...0.1.6
