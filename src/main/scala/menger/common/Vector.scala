@@ -63,6 +63,39 @@ case object Vector:
     vec(direction) = 1
     Vector[dim](vec*)
 
+  /** A per-axis geometry scale: one factor per axis, each finite and >= 0 (zero collapses the axis).
+    *
+    * It is applied after an object's uniform size. The last factor is the extrusion along the newest
+    * axis, e.g. the w axis of a 4D object.
+    */
+  case class Scale[dim <: Int & Singleton](factors: Float*)(implicit d: ValueOf[dim]):
+
+    require(d.value > 0, "Scale dimension must be positive")
+    require(factors.size == d.value, s"Expected ${d.value} elements, got ${factors.size}")
+    factors.zipWithIndex.foreach: (f, i) =>
+      require(f.isFinite && f >= 0f, s"Scale factor $i must be finite and >= 0, got $f")
+
+    def dimension: Int = d.value
+
+    def apply(i: Int): Float =
+      require(i >= 0 && i < d.value, s"Index must be between 0 and ${d.value - 1}, got $i")
+      factors(i)
+
+    def toIndexedSeq: IndexedSeq[Float] = factors.toIndexedSeq
+
+    def isIdentity: Boolean = factors.forall(_ == 1f)
+
+    def apply(v: Vector[dim]): Vector[dim] =
+      Vector[dim](factors.zip(v.v).map { case (s, x) => s * x }*)
+
+    def withLast(f: Float): Scale[dim] = Scale[dim]((factors.init :+ f)*)
+
+    override def toString: String = factors.map(float2string).mkString("Scale<", ", ", ">")
+
+  object Scale:
+    def identity[dim <: Int & Singleton](implicit d: ValueOf[dim]): Scale[dim] =
+      Scale[dim](Array.fill(d.value)(1f)*)
+
   val X: Vector[4] = unit[4](0)
   val Y: Vector[4] = unit[4](1)
   val Z: Vector[4] = unit[4](2)
