@@ -5,9 +5,8 @@ object RenderLimits:
    *  Increasing this requires recompiling the native library with a matching C++ change. */
   val MaxRayDepth: Int = 5
 
-// Configuration for render quality options
+// Configuration for render quality options. Shadows are always on, so there is no switch for them.
 case class RenderConfig(
-  shadows: Boolean = true,
   transparentShadows: Boolean = false,  // Sprint 13.2: colored shadows through transparent objects
   antialiasing: Boolean = false,
   aaMaxDepth: Int = 2,
@@ -24,7 +23,7 @@ case class RenderConfig(
 object RenderConfig:
   val Default: RenderConfig = RenderConfig()
   val HighQuality: RenderConfig = RenderConfig(
-    shadows = true, antialiasing = true, aaMaxDepth = 3, aaThreshold = 0.05f)
+    antialiasing = true, aaMaxDepth = 3, aaThreshold = 0.05f)
 
 // Configuration for Progressive Photon Mapping caustics
 case class CausticsConfig(
