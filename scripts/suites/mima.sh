@@ -6,7 +6,8 @@ set -u
 . ./standards/hooks/lib.sh
 
 echo "=== MiMa ==="
-LAST=$(git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
+VERSION=$(sed -n 's/^version := "\(.*\)"$/\1/p' build.sbt)
+LAST=$(git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -v -x -F "$VERSION" | head -1)
 if [ -z "$LAST" ]; then
   echo "MiMa: no release tag in this clone (fetch the tags: git fetch --tags)"
   suite_fail mima 1 "no release tag"
