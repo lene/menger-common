@@ -22,4 +22,5 @@ suites:
   preflight: { tier: push, requires: [] }
   lint:      { tier: push, requires: [] }
   unit:      { tier: push, requires: [scala] }
+  mima:      { tier: push, requires: [scala] }
   coverage:  { tier: main, requires: [scala] }

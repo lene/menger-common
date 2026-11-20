@@ -37,3 +37,15 @@ libraryDependencies ++= Seq(
   "org.scalatestplus" %% "scalacheck-1-19" % "3.2.20.0" % Test,
   "com.tngtech.archunit" % "archunit" % "1.3.0" % Test
 )
+
+// MiMa: binary compatibility against the last published release, run by the `mima` suite (pre-push and CI;
+// menger-common#32: 0.4.1 removed RenderConfig.shadows, which optix-jni 0.5.7 calls, and nothing checked it).
+// The previous release is the highest version tag, so it cannot go stale the way a fixed version does;
+// without tags (a shallow clone) the set is empty and scripts/suites/mima.sh refuses to run.
+// Every intentional break is a filter (mimaBinaryIssueFilters) with its reason, and the CHANGELOG lists it.
+mimaPreviousArtifacts := {
+  val tags = scala.util.Try(
+    scala.sys.process.Process(Seq("git", "tag", "--list", "[0-9]*.[0-9]*.[0-9]*", "--sort=-v:refname")).!!
+  ).getOrElse("")
+  tags.linesIterator.toList.headOption.map(organization.value %% name.value % _).toSet
+}
